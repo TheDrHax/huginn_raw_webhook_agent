@@ -39,6 +39,10 @@ module Agents
           "query": {
             "param1": "...",
             ...
+          },
+          "json": {
+            "param1": "...",
+            ...
           }
         }
         ```
@@ -94,7 +98,8 @@ module Agents
 
       payload = {
         "body" => request.raw_post(),
-        "query" => request.query_parameters()
+        "query" => request.query_parameters(),
+        "json" => parse_json(request.raw_post())
       }
 
       create_event(payload: payload)
@@ -103,6 +108,14 @@ module Agents
         [interpolated(params.merge(payload))['response'] || 'Event Created', code, "text/plain", interpolated['response_headers'].presence]
       else
         [interpolated(params.merge(payload))['response'] || 'Event Created', code]
+      end
+    end
+
+    def parse_json(raw)
+      begin
+        JSON.parse(raw)
+      rescue Exception
+        {}
       end
     end
 

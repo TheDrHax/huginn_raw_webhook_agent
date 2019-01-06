@@ -26,6 +26,7 @@ module Agents
         * `code` - The response code to the request. Defaults to '201'. If the code is '301' or '302' the request will automatically be redirected to the url defined in "response".
         * `recaptcha_secret` - Setting this to a reCAPTCHA "secret" key makes your agent verify incoming requests with reCAPTCHA.  Don't forget to embed a reCAPTCHA snippet including your "site" key in the originating form(s).
         * `recaptcha_send_remote_addr` - Set this to true if your server is properly configured to set REMOTE_ADDR to the IP address of each visitor (instead of that of a proxy server).
+        * `force_encoding` - Set this to override the automatic detection of request encoding. (example: `UTF-8`)
       MD
     end
 
@@ -51,7 +52,8 @@ module Agents
 
     def default_options
       { "secret" => "supersecretstring",
-        "expected_receive_period_in_days" => 1
+        "expected_receive_period_in_days" => 1,
+        "force_encoding" => "UTF-8"
       }
     end
 
@@ -96,10 +98,16 @@ module Agents
           return ["Not Authorized", 401]
       end
 
+      if interpolated['force_encoding'].presence
+        body = request.raw_post().force_encoding(interpolated['force_encoding'])
+      else
+        body = request.raw_post()
+      end
+
       payload = {
-        "body" => request.raw_post(),
+        "body" => body,
         "query" => request.query_parameters(),
-        "json" => parse_json(request.raw_post())
+        "json" => parse_json(body)
       }
 
       create_event(payload: payload)

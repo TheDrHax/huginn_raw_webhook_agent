@@ -1,3 +1,5 @@
+require 'active_support/core_ext'
+
 module Agents
   class RawWebhookAgent < Agent
     include WebRequestConcern
@@ -107,9 +109,10 @@ module Agents
       payload = {
         "body" => body,
         "query" => request.query_parameters(),
-        "json" => parse_json(body)
+        "json" => parse_json(body),
+        "xml" => parse_xml(body)
       }
-      
+
       begin
         create_event(payload: payload)
       rescue Encoding::UndefinedConversionError => e
@@ -127,6 +130,14 @@ module Agents
     def parse_json(raw)
       begin
         JSON.parse(raw)
+      rescue Exception
+        {}
+      end
+    end
+
+    def parse_xml(raw)
+      begin
+        Hash.from_xml(raw)
       rescue Exception
         {}
       end

@@ -109,8 +109,13 @@ module Agents
         "query" => request.query_parameters(),
         "json" => parse_json(body)
       }
-
-      create_event(payload: payload)
+      
+      begin
+        create_event(payload: payload)
+      rescue Encoding::UndefinedConversionError => e
+        log(e.message + ' - please set the `force_encoding` parameter')
+        return ['Internal Server Error', 500]
+      end
 
       if interpolated['response_headers'].presence
         [interpolated(params.merge(payload))['response'] || 'Event Created', code, "text/plain", interpolated['response_headers'].presence]

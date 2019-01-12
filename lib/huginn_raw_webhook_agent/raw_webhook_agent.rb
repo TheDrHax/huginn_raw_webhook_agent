@@ -29,6 +29,7 @@ module Agents
         * `recaptcha_secret` - Setting this to a reCAPTCHA "secret" key makes your agent verify incoming requests with reCAPTCHA.  Don't forget to embed a reCAPTCHA snippet including your "site" key in the originating form(s).
         * `recaptcha_send_remote_addr` - Set this to true if your server is properly configured to set REMOTE_ADDR to the IP address of each visitor (instead of that of a proxy server).
         * `force_encoding` - Set this to override the automatic detection of request encoding. (example: `UTF-8`)
+        * `content_type` - Override the value of Content-Type header in the response. (example: `application/json`, default: `text/plain`)
       MD
     end
 
@@ -120,10 +121,13 @@ module Agents
         return ['Internal Server Error', 500]
       end
 
+      content = interpolated(params.merge(payload))['response'] || 'Event Created'
+      content_type = interpolated['content_type'] || 'text/plain'
+
       if interpolated['response_headers'].presence
-        [interpolated(params.merge(payload))['response'] || 'Event Created', code, "text/plain", interpolated['response_headers'].presence]
+        [content, code, content_type, interpolated['response_headers'].presence]
       else
-        [interpolated(params.merge(payload))['response'] || 'Event Created', code]
+        [content, code, content_type]
       end
     end
 
